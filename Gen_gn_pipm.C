@@ -100,11 +100,11 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
   TF1* n_k     = new TF1("","((x<0.25)?0.8*3/((0.25)**3):0.5*0.2*2.533333/(1./(0.25)-1./5)/(x**4))       ",0,1);
   TF1* n_k_k2  = new TF1("","((x<0.25)?0.8*3/((0.25)**3):0.5*0.2*2.533333/(1./(0.25)-1./5)/(x**4))*(x**2)",0,1);
 
-  //SOME HISTOGRAMS:                                                                                                                                                                 
+  /* //SOME HISTOGRAMS:                                                                                                                                                                 
   TH1F* hga = new TH1F("hga","",100,0.,10.);
   TH1F* hkk = new TH1F("hkk","",100,0.,10.);
   TH1F* hEd = new TH1F("hEd","",100,0.,100.);
-
+  */
   Double_t PmissX, PmissY, PmissZ;
   TVector3 Prec3;
   Double_t con, Sr, Beam, cs_theta_cm;
@@ -122,6 +122,9 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
 
     Pmiss = n_k_k2->GetRandom();
     gRandom->Sphere(PmissX, PmissY, PmissZ, Pmiss);
+    /*    PmissX = 0.;
+    PmissY = 0.;
+    PmissZ = 0.2;*/
     theta_miss = TMath::ACos(PmissZ/Pmiss)*180/3.14;      // Calculate theta [degrees]                                                                                      
     phi_miss = TMath::ATan2(PmissY,PmissX)*180/3.14;       // Calculate phi   [degrees]
 
@@ -141,7 +144,7 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
     Double_t s_init = pow((E_beam + sqrt(Pmiss*Pmiss + 0.940*0.940)),2) - pow(PmissX,2) - pow(PmissY,2) - pow(PmissZ+E_beam,2);//2*E_beam*0.940 + 0.940*0.940;
     k_i = sqrt(0.5*E_beam*0.940);
     k_f = sqrt((s_init - pow((0.940-0.140),2))*(s_init - pow((0.940+0.140),2))/4./s_init);
-    hkk->Fill(k_i*k_f);
+    //    hkk->Fill(k_i*k_f);
     //    cout<<"Sinit = "<<s_init<<endl;  
     //    Double_t s_init1 = 2*E_beam*0.940 + 0.940*0.940;  
     //cout<<"Sinit1 = "<<s_init1<<endl;
@@ -192,7 +195,7 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
       
       // scattering angle - theta_cm
       Double_t theta_ll = theta_cm*TMath::Pi()/180.;
-      Double_t phi_ll = 20./180.*3.1415;//gRandom->Uniform(0,2*TMath::Pi());
+      Double_t phi_ll = gRandom->Uniform(0,2*TMath::Pi());
       
       // outgoing particles:
       TVector3 Vpart3_cm_oz3( Vbeam_cm_oz3.Z()*cos(phi_ll)*sin(theta_ll),  Vbeam_cm_oz3.Z()*sin(phi_ll)*sin(theta_ll),  Vbeam_cm_oz3.Z()*cos(theta_ll));
@@ -220,11 +223,12 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
       P4 = Vpart4_lab.Vect();
       absP3 = Vpart3_lab.Vect().Mag();
       absP4 = Vpart4_lab.Vect().Mag();
-      theta_P3 = TMath::ACos(P3.Z()/P3.Mag())/TMath::Pi()*180.;
-      theta_P4 = TMath::ACos(P4.Z()/P4.Mag())/TMath::Pi()*180.;
-      phi_P3 = TMath::ATan2(P3.Y(),P3.X())/TMath::Pi()*180.;
-      phi_P4 = TMath::ATan2(P4.Y(),P4.X())/TMath::Pi()*180.;
-      
+      theta_P3 = P3.Theta()/TMath::Pi()*180.;
+      theta_P4 = P4.Theta()/TMath::Pi()*180.;
+      phi_P3 = P3.Phi()/TMath::Pi()*180.;
+      phi_P4 = P4.Phi()/TMath::Pi()*180.;
+      //      cout<<"phiP3 = "<<phi_P3<<", phi_P4 - "<<phi_P4<<endl;      
+
       t = pow((E_beam-sqrt(pow(absP3,2)+pow(0.140,2))),2) - (pow(-P3.X(),2)+pow(-P3.Y(),2)+pow((E_beam-P3.Z()),2));
       u = pow((E_beam-sqrt(pow(absP4,2)+pow(0.938,2))),2) - (pow(-P4.X(),2)+pow(-P4.Y(),2)+pow((E_beam-P4.Z()),2));
       s = pow((sqrt(pow(absP3,2)+pow(0.140,2))+sqrt(pow(absP4,2)+pow(0.938,2))),2) - (pow((P3.X()+P4.X()),2)+pow((P3.Y()+P4.Y()),2)+pow((P3.Z()+P4.Z()),2)); // (E1+E2)^2 - (|p1+p2|)^2
@@ -242,8 +246,8 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
       //                       nb/Sr                       nb->b    b->cm2                                 Sr                                       Beam     Target    transp. d.eff     30 days                       theta_cm dependence of the cross-seection                                                                                                       
       //weight = (cross_section*(gamma_cm*gamma_cm)/3.14) * (1e-9) * (1e-24) * (2*3.14*(cos((theta_cm-0.5)*3.14/180)-cos((theta_cm+0.5)*3.14/180))) * (5e7) *  (6e23)  *  0.5   *  0.75 *  3600*24*30 * pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4) /(N);
 
-      weight = con * (cross_section*(gamma_cm*gamma_cm)/3.14) * Sr * Beam *  cs_theta_cm;
-      weight_kk = con * (cross_section*(k_i*k_f)/3.14) * Sr * Beam * cs_theta_cm;
+      weight = con * (cross_section*(gamma_cm*gamma_cm)/3.14) * Sr * Beam *  cs_theta_cm / (N);
+      weight_kk = con * (cross_section*(k_i*k_f)/3.14) * Sr * Beam * cs_theta_cm / (N);
 
       //cout<<"w = "<<weight<<", w_kk = "<<weight_kk<<endl;
 
@@ -251,12 +255,12 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
 	T->Fill();
       }
     } // loop over theta_cm
-    hga->Fill(gamma_cm*gamma_cm);
+    //hga->Fill(gamma_cm*gamma_cm);
 
   }// loop over N
   T->Write();
-  hkk->Write();
-  hga->Write();
+  //hkk->Write();
+  //hga->Write();
   f->Write();
   f->Close();
 }
