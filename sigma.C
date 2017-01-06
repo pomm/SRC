@@ -125,7 +125,9 @@ void sigma(){
   TH2F* tt = new TH2F("tt","tt",lines,2.8,12.,17,47.5,132.5);
   TH2F* uu = new TH2F("uu","uu",lines,2.8,12.,17,47.5,132.5);
   TH2F* t2 = new TH2F("t2","t2",lines,2.8,12.,17,47.5,132.5);
+  TH2F* u2 = new TH2F("u2","u2",lines,2.8,12.,17,47.5,132.5);
   TH2F* t3 = new TH2F("t3","t3",lines,2.8,12.,17,47.5,132.5);
+  TH2F* u3 = new TH2F("u3","u3",lines,2.8,12.,17,47.5,132.5);
   TH1F* ev1 = new TH1F("ev1","ev1",17,47.5,132.5);
   TH1F* ev2 = new TH1F("ev2","ev2",17,47.5,132.5);
   TH1F* ev3 = new TH1F("ev3","ev3",17,47.5,132.5);
@@ -135,11 +137,11 @@ void sigma(){
   double t = 0.;
   double u = 0.;
   double s = 0.;
-  double Pm = 0.0;
+  double Pm = -0.6;
   TLorentzVector v_miss(0.,0.,Pm,sqrt(0.940*0.940+Pm*Pm)); // Pm = 0.2 for CT
   TVector3 m1 = v_miss.BoostVector();
   TLorentzVector v_beam;
-  for(Int_t i = 0; i<1/*lines*/; i++){
+  for(Int_t i = 0; i<lines; i++){
     E_beam = 2.9+0.2*i;
     s_init = 2*E_beam*0.940 + 0.940*0.940;
     k_i = sqrt(0.5*E_beam*0.940);
@@ -197,10 +199,25 @@ void sigma(){
       uu->SetBinContent(i+1, j+1, u);
       if(fabs(t) > 2.){
 	t2->SetBinContent(i+1, j+1, t);
-      }else{t2->SetBinContent(i+1,j+1, -100000000.);}
+      }else{
+	t2->SetBinContent(i+1,j+1, -100000000.);
+      }
       if(fabs(t) > 3.){
         t3->SetBinContent(i+1, j+1, t);
-      }else{t3->SetBinContent(i+1,j+1, -100000000.);}
+      }else{
+	t3->SetBinContent(i+1,j+1, -100000000.);
+      }
+      if(fabs(u) > 2.){
+        u2->SetBinContent(i+1, j+1, u);
+      }else{
+        u2->SetBinContent(i+1,j+1, -100000000.);
+      }
+      if(fabs(u) > 3.){
+        u3->SetBinContent(i+1, j+1, u);
+      }else{
+        u3->SetBinContent(i+1,j+1, -100000000.);
+	}
+
       //                                         nb/Sr (s)                                             nb->b     b->cm2                                      Sr                                  Beam       Target    efficiencies   30 days           theta_cm dependency of the cross section
       if(fabs(t) > 2.){
 	hh2->SetBinContent(i+1, j+1, F_CrossSection->Eval(Effective_E)* (k_i*k_f)/3.14 * (1e-9) * (1e-24) * (2*3.14*(cos((theta_cm-2.5)*3.14/180)-cos((theta_cm+2.5)*3.14/180)))* GammaBeamHist->GetBinContent(i+1) * (6.3e23) * 0.5 * 0.75* 3600*24*30  * pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4));
@@ -259,22 +276,37 @@ void sigma(){
   t2->SetTitle("|t| > 2.");
   t2->GetXaxis()->SetTitle("E_{#gamma} [GeV]");
   t2->GetYaxis()->SetTitle("#theta_{cm} [degrees]");
-  t2->SetMinimum(-20.);
+  t2->SetMinimum(-10.);
   t2->Draw("col2z");
   c3->cd(3);
   t3->SetTitle("|t| > 3.");
   t3->GetXaxis()->SetTitle("E_{#gamma} [GeV]");
   t3->GetYaxis()->SetTitle("#theta_{cm} [degrees]");
-  t3->SetMinimum(-20.);
+  t3->SetMinimum(-10.);
   t3->Draw("col2z");
 
-  TCanvas* c4 = new TCanvas("c4","c4",500,500);
+  TCanvas* c4 = new TCanvas("c4","c4",1800,500);
+  c4->Divide(3,1);
+  c4->cd(1);
   uu->SetTitle("u");
   uu->GetXaxis()->SetTitle("E_{#gamma} [GeV]");
   uu->GetYaxis()->SetTitle("#theta_{cm} [degrees]");
   //tt->SetMinimum(0.0001);                                                                                                                                                      
   uu->Draw("col2z");
-
+  c4->cd(2);
+  u2->SetTitle("|u| > 2.");
+  u2->GetXaxis()->SetTitle("E_{#gamma} [GeV]");
+  u2->GetYaxis()->SetTitle("#theta_{cm} [degrees]");
+  u2->SetMinimum(-10.);
+  u2->SetMaximum(-2.);
+  u2->Draw("col2z");
+  c4->cd(3);
+  u3->SetTitle("|u| > 3.");
+  u3->GetXaxis()->SetTitle("E_{#gamma} [GeV]");
+  u3->GetYaxis()->SetTitle("#theta_{cm} [degrees]");
+  u3->SetMinimum(-10.);
+  u3->SetMaximum(-3.);
+  u3->Draw("col2z");
 
   TCanvas* c2 = new TCanvas("c2","c2",500,500);
   c2->cd();
@@ -299,10 +331,10 @@ void sigma(){
   ev4->Draw("same");
 
   TString intev1, intev2, intev3, intev4;
-  intev1.Form("E_{#gamma} (3-5] GeV, %.0f ev", ev1->Integral(1,20));
-  intev2.Form("E_{#gamma} (5-7.5] GeV, %.0f ev", ev2->Integral(1,20));
-  intev3.Form("E_{#gamma} (7.5-9] GeV, %.0f ev", ev3->Integral(1,20));
-  intev4.Form("E_{#gamma} (9-12], %.0f ev", ev4->Integral(1,20));
+  intev1.Form("E_{#gamma} (3-5] GeV, %.1f k ev", ev1->Integral(1,20)/1000.);
+  intev2.Form("E_{#gamma} (5-7.5] GeV, %.1f k ev", ev2->Integral(1,20)/1000.);
+  intev3.Form("E_{#gamma} (7.5-9] GeV, %.1f k ev", ev3->Integral(1,20)/1000.);
+  intev4.Form("E_{#gamma} (9-12], %.1f k ev", ev4->Integral(1,20)/1000.);
 
   TLegend* leg1 = new TLegend(0.5,0.5,0.75,0.75);
   leg1->SetLineColor(0);

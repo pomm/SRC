@@ -1,21 +1,12 @@
 #include "sigma.C"
-void Gen_gn_pipm(int N = 1, bool printOutput = false){
+void Gen_gn_pipm(int N = 10000, bool printOutput = false){
 
   TString out;
   out.Form("gn_pimp_N%d.root",N);
 
-  SetRootPalette(1);
-  gStyle->SetOptStat(0);
-  gStyle->SetLabelSize(0.05,"X");
-  gStyle->SetLabelSize(0.05,"Y");
-  gStyle->SetLabelSize(0.05,"Z");
-  gStyle->SetTitleSize(0.05,"X");
-  gStyle->SetTitleSize(0.05,"Y");
-  gStyle->SetTitleSize(0.05,"Z");
-
   // Gamma spectrum
   Double_t E_beam = 9;
-  TCanvas* c = new TCanvas("c","c",0,0,500,500);
+  //  TCanvas* c = new TCanvas("c","c",0,0,500,500);
   ifstream file;
   file.open("collimated_cor1.txt");
   const Int_t lines =46;
@@ -32,7 +23,7 @@ void Gen_gn_pipm(int N = 1, bool printOutput = false){
   GammaBeamHist->GetXaxis()->SetTitle("E_{#gamma} [GeV]");                                                                                                                             
   GammaBeamHist->GetYaxis()->SetTitleSize(0.06);                                                                                                                                       
   GammaBeamHist->GetYaxis()->SetTitle("#gamma / s");                                                                                                                                   
-  GammaBeamHist->Draw();
+  //GammaBeamHist->Draw();
 
   //                                                                                                                                                                                 
   // Tree to hold (gamma,p pi p) 'SRC' events and extra kinematical variables.                                                                                                       
@@ -90,8 +81,6 @@ void Gen_gn_pipm(int N = 1, bool printOutput = false){
   T->Branch("absP4",&absP4,"absP4/D");                                 // Leading pion momentum vector magnitude                                                                              
 
   // Final 3-momentum vector for the scattered protons in the lab                                                                                                                    
-  //  T->Branch("P_1",&P_1,"P_1[3]/D");
-  //T->Branch("P_2",&P_2,"P_2[3]/D");
   T->Branch("P3","TVector3",&P3);
   T->Branch("P4","TVector3",&P4);
 
@@ -101,14 +90,12 @@ void Gen_gn_pipm(int N = 1, bool printOutput = false){
 
 
   //Parametrisation of the gamma+n -> p pi- cross section                                                                                                                            
-  //                                                                                                                                                                                 
   // TF1* F_CrossSection = new TF1("F_CrossSection","(3.81583e+04)/(x**7)",1,15);// gamma+p->pi+ + n  | Hayan + SLAC                                                                 
   //    TF1* F_CrossSection = new TF1("F_CrossSection","(1.30380e+04)/(x**5.763)",1,15);// gamma+n->pi- + p  | Hayan                                                                 
   //    TF1* F_CrossSection = new TF1("F_CrossSection","(1.60048e+04)/(x**5.95421)",1,15);// gamma+n->pi- + p  | Hayan - only high s                                                 
   TF1* F_CrossSection = new TF1("F_CrossSection","(6.67314e+04)/(x**7)",1,15);// gamma+n->pi- + p  | Hayan - only high s                                                         
 
-  // Parametrization of the momentum distribution for nucleons in a nucleus (including SRC nucleons)                                                                                 
-  //                                                                                                                                                                                 
+  // Parametrization of the momentum distribution for nucleons in a nucleus (including SRC nucleons)
   TF1* SRCtail = new TF1("SRCtail","1/(x**4)",0.25,0.7);
   TF1* n_k     = new TF1("","((x<0.25)?0.8*3/((0.25)**3):0.5*0.2*2.533333/(1./(0.25)-1./5)/(x**4))       ",0,1);
   TF1* n_k_k2  = new TF1("","((x<0.25)?0.8*3/((0.25)**3):0.5*0.2*2.533333/(1./(0.25)-1./5)/(x**4))*(x**2)",0,1);
@@ -119,57 +106,45 @@ void Gen_gn_pipm(int N = 1, bool printOutput = false){
   TH1F* hEd = new TH1F("hEd","",100,0.,100.);
 
   Double_t PmissX, PmissY, PmissZ;
-  Double_t Pcm_x=0, Pcm_y=0, Pcm_z=0;
-  Double_t Recoil_x=0, Recoil_y=0, Recoil_z=0;
-  Double_t con;
+  TVector3 Prec3;
+  Double_t con, Sr, Beam, cs_theta_cm;
 
   // Event generation:
   // 1. Raffle a nucleon in the nucleus
   // 2. If it has high momentum, raffle a correlated partner = recoil
   for (int i=0; i<N; i++){
 
-    E_beam = 2.9;//GammaBeamHist->GetRandom();
-    cout<<"bin number is "<<GammaBeamHist->FindBin(E_beam)<<endl;
+    if(i%(N/100)==0) cout << i/(N/100)<<"%" << endl; 
+
+    E_beam = GammaBeamHist->GetRandom();
+    //    cout<<"bin number is "<<GammaBeamHist->FindBin(E_beam)<<endl;
     Original_E = E_beam;
 
-    Pmiss = 0.;//n_k_k2->GetRandom();
+    Pmiss = n_k_k2->GetRandom();
     gRandom->Sphere(PmissX, PmissY, PmissZ, Pmiss);
     theta_miss = TMath::ACos(PmissZ/Pmiss)*180/3.14;      // Calculate theta [degrees]                                                                                      
     phi_miss = TMath::ATan2(PmissY,PmissX)*180/3.14;       // Calculate phi   [degrees]
 
     //create recoil
     if(Pmiss > 0.25){
-
-      // Raffle SRC-pair C.M. momentum.                                                                                                                                          
-      Pcm_x = gRandom->Gaus(0,0.14);
-      Pcm_y = gRandom->Gaus(0,0.14);
-      Pcm_z = gRandom->Gaus(0,0.14);
-
-      // Calculate 3-momentum vector for the 2nd nucleon in the pair.                                                                                                            
-      Recoil_x = Pcm_x - PmissX;
-      Recoil_y = Pcm_y - PmissY;
-      Recoil_z = Pcm_z - PmissZ;
-      Precoil = TMath::Sqrt(pow(Recoil_x,2)+pow(Recoil_y,2)+pow(Recoil_z,2));
-      theta_recoil = TMath::ACos(Recoil_z/Precoil)*180/3.14;
-      phi_recoil = TMath::ATan2(Recoil_y,Recoil_x)*180/3.14;
-
+      // Raffle SRC-pair C.M. momentum. from gauss with sigma of 0.14 GeV
+      // Calculate 3-momentum vector for the 2nd nucleon in the pair.
+      Prec3.SetXYZ(gRandom->Gaus(0,0.14)-PmissX, gRandom->Gaus(0,0.14)-PmissY, gRandom->Gaus(0,0.14)-PmissZ);
     }else{
-      Recoil_x = 0;
-      Recoil_y = 0;
-      Recoil_z = 0;
-      Precoil = 0;
-      theta_recoil = 0;
-      phi_recoil = 0;
+      Prec3.SetXYZ(0.,0.,0.);
     }
+    Precoil = Prec3.Mag();
+    theta_recoil = Prec3.Theta()/TMath::Pi()*180.;
+    phi_recoil = Prec3.Phi()/TMath::Pi()*180.;
 
     // Factor:
     Double_t s_init = pow((E_beam + sqrt(Pmiss*Pmiss + 0.940*0.940)),2) - pow(PmissX,2) - pow(PmissY,2) - pow(PmissZ+E_beam,2);//2*E_beam*0.940 + 0.940*0.940;
     k_i = sqrt(0.5*E_beam*0.940);
     k_f = sqrt((s_init - pow((0.940-0.140),2))*(s_init - pow((0.940+0.140),2))/4./s_init);
     hkk->Fill(k_i*k_f);
-    cout<<"Sinit = "<<s_init<<endl;  
-    Double_t s_init1 = 2*E_beam*0.940 + 0.940*0.940;  
-    cout<<"Sinit1 = "<<s_init1<<endl;
+    //    cout<<"Sinit = "<<s_init<<endl;  
+    //    Double_t s_init1 = 2*E_beam*0.940 + 0.940*0.940;  
+    //cout<<"Sinit1 = "<<s_init1<<endl;
 
     // 4-momentum of the beam and nucleon in the lab:
     TLorentzVector Vbeam_lab(TVector3(0.,0.,E_beam),         E_beam                            );
@@ -183,7 +158,8 @@ void Gen_gn_pipm(int N = 1, bool printOutput = false){
     Vmiss_nrf.Boost(-m1);
     Effective_E = Vbeam_nrf.Vect().Mag();
     cross_section = F_CrossSection->Eval(Effective_E);
-    cout<<"nucl rest :"<<Vbeam_nrf.X()<<", "<<Vbeam_nrf.Y()<<", "<<Vbeam_nrf.Z()<<endl;
+    //cout<<"Effective_E = "<<Effective_E<<", cs = "<<cross_section<<endl;
+    //cout<<"nucl rest :"<<Vbeam_nrf.X()<<", "<<Vbeam_nrf.Y()<<", "<<Vbeam_nrf.Z()<<endl;
 
     // boost to the c.m. system of the nucleon + beam:
     TVector3 m = (Vmiss_lab + Vbeam_lab).BoostVector();
@@ -192,12 +168,13 @@ void Gen_gn_pipm(int N = 1, bool printOutput = false){
     Vbeam_cm.Boost(-m);
     Vmiss_cm.Boost(-m);
     gamma_cm = Vbeam_cm.Vect().Mag();
+    //cout<<"gamma_cm = "<<gamma_cm<<endl;
     Nucleon_cm = Vmiss_cm.Vect().Mag();
     
     // loop over theta_cm scattering angles:
     for(int k=0; k<17; k++){
       theta_cm = 50.+k*5.;
-      cout<<"theta = "<<theta_cm<<endl;
+      //cout<<"theta = "<<theta_cm<<endl;
 
       // rotate vectors so that the collision is along z axis:
       Double_t rot_phi = Vbeam_cm.Vect().Phi();
@@ -209,17 +186,17 @@ void Gen_gn_pipm(int N = 1, bool printOutput = false){
       Vmiss_cm_oz3.RotateZ(-rot_phi);
       Vmiss_cm_oz3.RotateY(-rot_theta);
 
-      cout<<"rot_phi = "<<rot_phi<<", rot_theta = "<<rot_theta<<endl;
-      cout<<"beam_cm: "<<Vbeam_cm_oz3.z()<<", mag = "<<Vbeam_cm_oz3.Mag()<<endl;
-      cout<<"miss_cm: "<<Vmiss_cm_oz3.z()<<", mag = "<<Vmiss_cm_oz3.Mag()<<", angle with beam = "<<Vbeam_cm_oz3.Angle(Vmiss_cm_oz3)/3.1415*180.<<endl;
+      //cout<<"rot_phi = "<<rot_phi<<", rot_theta = "<<rot_theta<<endl;
+      //cout<<"beam_cm: "<<Vbeam_cm_oz3.z()<<", mag = "<<Vbeam_cm_oz3.Mag()<<endl;
+      //cout<<"miss_cm: "<<Vmiss_cm_oz3.z()<<", mag = "<<Vmiss_cm_oz3.Mag()<<", angle with beam = "<<Vbeam_cm_oz3.Angle(Vmiss_cm_oz3)/3.1415*180.<<endl;
       
       // scattering angle - theta_cm
-      Double_t theta_ll = theta_cm*3.14/180.;//TMath::Pi()/180.;
-      Double_t phi_ll = 0.;//gRandom->Uniform(0,2*TMath::Pi());
+      Double_t theta_ll = theta_cm*TMath::Pi()/180.;
+      Double_t phi_ll = 20./180.*3.1415;//gRandom->Uniform(0,2*TMath::Pi());
       
       // outgoing particles:
-      TVector3 Vpart3_cm_oz3( Vbeam_cm_oz3.Z()*cos(phi_ll)*sin(theta_ll),  Vbeam_cm_oz3.Z()*sin(phi_ll)*cos(theta_ll),  Vbeam_cm_oz3.Z()*cos(theta_ll));
-      TVector3 Vpart4_cm_oz3(-Vbeam_cm_oz3.Z()*cos(phi_ll)*sin(theta_ll), -Vbeam_cm_oz3.Z()*sin(phi_ll)*cos(theta_ll), -Vbeam_cm_oz3.Z()*cos(theta_ll));
+      TVector3 Vpart3_cm_oz3( Vbeam_cm_oz3.Z()*cos(phi_ll)*sin(theta_ll),  Vbeam_cm_oz3.Z()*sin(phi_ll)*sin(theta_ll),  Vbeam_cm_oz3.Z()*cos(theta_ll));
+      TVector3 Vpart4_cm_oz3(-Vbeam_cm_oz3.Z()*cos(phi_ll)*sin(theta_ll), -Vbeam_cm_oz3.Z()*sin(phi_ll)*sin(theta_ll), -Vbeam_cm_oz3.Z()*cos(theta_ll));
       
       // rotate back:
       TVector3 Vpart3_cm3 = Vpart3_cm_oz3;
@@ -235,8 +212,8 @@ void Gen_gn_pipm(int N = 1, bool printOutput = false){
       Vpart3_lab.Boost(m);
       Vpart4_lab.Boost(m);
 
-      cout<<"tmp3: "<<Vpart3_lab.X()<<", "<<Vpart3_lab.Y()<<" "<<Vpart3_lab.Z()<<endl;
-      cout<<"tmp4: "<<Vpart4_lab.X()<<", "<<Vpart4_lab.Y()<<" "<<Vpart4_lab.Z()<<endl;
+      //cout<<"tmp3: "<<Vpart3_lab.X()<<", "<<Vpart3_lab.Y()<<" "<<Vpart3_lab.Z()<<endl;
+      //cout<<"tmp4: "<<Vpart4_lab.X()<<", "<<Vpart4_lab.Y()<<" "<<Vpart4_lab.Z()<<endl;
 
       // save stuff to the tree:
       P3 = Vpart3_lab.Vect();
@@ -252,25 +229,27 @@ void Gen_gn_pipm(int N = 1, bool printOutput = false){
       u = pow((E_beam-sqrt(pow(absP4,2)+pow(0.938,2))),2) - (pow(-P4.X(),2)+pow(-P4.Y(),2)+pow((E_beam-P4.Z()),2));
       s = pow((sqrt(pow(absP3,2)+pow(0.140,2))+sqrt(pow(absP4,2)+pow(0.938,2))),2) - (pow((P3.X()+P4.X()),2)+pow((P3.Y()+P4.Y()),2)+pow((P3.Z()+P4.Z()),2)); // (E1+E2)^2 - (|p1+p2|)^2
   
-      cout<<"t = "<<t<<", s = "<<s<<", u = "<<u<<endl;
+      //cout<<"t = "<<t<<", s = "<<s<<", u = "<<u<<endl;
 
-      // define the constant for the weight:
+      // define components for the weight:
       //    Target   transp.eff det.eff.   30 days   nb->b   b->cm2
-      con = 6.3e23 * 0.5       * 0.75  * 3600*24*30 * 1e-9 * 1e-24;     
+      con = 6.e23 * 0.5       * 0.75  * 3600*24*30 * 1e-9 * 1e-24;     
+      Sr = (2*3.14*(cos((theta_cm-2.5)*3.14/180)-cos((theta_cm+2.5)*3.14/180))) ;
+      Beam = GammaBeamHist->GetBinContent(GammaBeamHist->FindBin(E_beam));
+      cs_theta_cm = pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4);
 
       // Define the event weight based on the cross-section                                                                                                                      
       //                       nb/Sr                       nb->b    b->cm2                                 Sr                                       Beam     Target    transp. d.eff     30 days                       theta_cm dependence of the cross-seection                                                                                                       
       //weight = (cross_section*(gamma_cm*gamma_cm)/3.14) * (1e-9) * (1e-24) * (2*3.14*(cos((theta_cm-0.5)*3.14/180)-cos((theta_cm+0.5)*3.14/180))) * (5e7) *  (6e23)  *  0.5   *  0.75 *  3600*24*30 * pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4) /(N);
 
-      weight = con * (cross_section*(gamma_cm*gamma_cm)/3.14) * (2*3.14*(cos((theta_cm-2.5)*3.14/180)-cos((theta_cm+2.5)*3.14/180))) * GammaBeamHist->GetBinContent(GammaBeamHist->FindBin(E_beam)) * pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4);      
+      weight = con * (cross_section*(gamma_cm*gamma_cm)/3.14) * Sr * Beam *  cs_theta_cm;
+      weight_kk = con * (cross_section*(k_i*k_f)/3.14) * Sr * Beam * cs_theta_cm;
 
-      //weight_kk =  (cross_section*(k_i*k_f)/3.14) * (1e-9) * (1e-24) * (2*3.14*(cos((theta_cm-0.5)*3.14/180)-cos((theta_cm+0.5)*3.14/180))) * (5e7) * (6.3e23) * 0.5 * 0.75* 3600*24*30 * pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4) /(N);
-      
-      weight_kk = con * (cross_section*(k_i*k_f)/3.14) * (2*3.14*(cos((theta_cm-2.5)*3.14/180)-cos((theta_cm+2.5)*3.14/180))) * GammaBeamHist->GetBinContent(GammaBeamHist->FindBin(E_beam)) * pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4);
+      //cout<<"w = "<<weight<<", w_kk = "<<weight_kk<<endl;
 
-      // if(abs(t)>3 && abs(u)>3){ // only consider 'hard' scattering events.                                                                                                       
+      if(abs(t)>3 && abs(u)>3){ // only consider 'hard' scattering events.                                                                                                       
 	T->Fill();
-	//}
+      }
     } // loop over theta_cm
     hga->Fill(gamma_cm*gamma_cm);
 
