@@ -84,6 +84,7 @@ void sigma(){
   
   // Factor:
   double s_init = 0.;
+  double s_new = 0.;
   double E_beam = 0.;
   double k_i, k_f;                                                                                                                                                  
   double theta_cm = 0.;
@@ -144,6 +145,7 @@ void sigma(){
   for(Int_t i = 0; i<lines; i++){
     E_beam = 2.9+0.2*i;
     s_init = 2*E_beam*0.940 + 0.940*0.940;
+    s_new = pow((E_beam + sqrt(Pm*Pm + 0.940*0.940)),2) - pow(v_miss.X(),2) - pow(v_miss.Y(),2) - pow(v_miss.Z()+E_beam,2);
     k_i = sqrt(0.5*E_beam*0.940);
     k_f = sqrt((s_init - pow(0.940-0.140,2))*(s_init - pow(0.940+0.140,2))/4./s_init);
     cout<<"E_beam = "<<E_beam<<", bin = "<<i+1<<", gamma rate - "<<GammaBeamHist->GetBinContent(i+1)<<", cs = "<<F_CrossSection->Eval(2*E_beam*0.940 + 0.940*0.940)<<endl;

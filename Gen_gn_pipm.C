@@ -1,8 +1,9 @@
 #include "sigma.C"
-void Gen_gn_pipm(int N = 10000, bool printOutput = false){
+void Gen_gn_pipm(int N = 10000, int A = 2, bool printOutput = false){
+  // A - nucleus, which contains the target nucleon
 
   TString out;
-  out.Form("gn_pimp_N%d.root",N);
+  out.Form("gn_pimp_N%d_oldGamma.root",N);
 
   // Gamma spectrum
   Double_t E_beam = 9;
@@ -23,7 +24,7 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
   GammaBeamHist->GetXaxis()->SetTitle("E_{#gamma} [GeV]");                                                                                                                             
   GammaBeamHist->GetYaxis()->SetTitleSize(0.06);                                                                                                                                       
   GammaBeamHist->GetYaxis()->SetTitle("#gamma / s");                                                                                                                                   
-  //GammaBeamHist->Draw();
+  GammaBeamHist->Draw();
 
   //                                                                                                                                                                                 
   // Tree to hold (gamma,p pi p) 'SRC' events and extra kinematical variables.                                                                                                       
@@ -106,7 +107,7 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
   TH1F* hEd = new TH1F("hEd","",100,0.,100.);
   */
   Double_t PmissX, PmissY, PmissZ;
-  TVector3 Prec3;
+  TVector3 Prec3, Pcm3;
   Double_t con, Sr, Beam, cs_theta_cm;
 
   // Event generation:
@@ -131,8 +132,9 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
     //create recoil
     if(Pmiss > 0.25){
       // Raffle SRC-pair C.M. momentum. from gauss with sigma of 0.14 GeV
+      Pcm3.SetXYZ(gRandom->Gaus(0,0.14),gRandom->Gaus(0,0.14),gRandom->Gaus(0,0.14));
       // Calculate 3-momentum vector for the 2nd nucleon in the pair.
-      Prec3.SetXYZ(gRandom->Gaus(0,0.14)-PmissX, gRandom->Gaus(0,0.14)-PmissY, gRandom->Gaus(0,0.14)-PmissZ);
+      Prec3.SetXYZ(Pcm3.X()-PmissX, Pcm3.Y()-PmissY, Pcm3.Z()-PmissZ);
     }else{
       Prec3.SetXYZ(0.,0.,0.);
     }
@@ -141,9 +143,19 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
     phi_recoil = Prec3.Phi()/TMath::Pi()*180.;
 
     // Factor:
+    // scattering off free moving proton:
     Double_t s_init = pow((E_beam + sqrt(Pmiss*Pmiss + 0.940*0.940)),2) - pow(PmissX,2) - pow(PmissY,2) - pow(PmissZ+E_beam,2);//2*E_beam*0.940 + 0.940*0.940;
     k_i = sqrt(0.5*E_beam*0.940);
     k_f = sqrt((s_init - pow((0.940-0.140),2))*(s_init - pow((0.940+0.140),2))/4./s_init);
+    // scattering off proton inside nucleus:
+    /*Double_t s_new;
+    if(Pmiss < 0.25){
+      s_init = pow((E_beam + 0.940 - 0.015 - Pmiss*Pmiss/2./0.940/(A-1)),2) - pow(PmissX,2) - pow(PmissY,2) - pow(PmissZ+E_beam,2);
+    }else{
+      s_init = pow((E_beam + sqrt(pow(2*0.940,2) + pow(Pcm3.Mag(),2)) - sqrt(pow(Prec3.Mag(),2) + 0.940*0.940)),2) - pow(PmissX,2) - pow(PmissY,2) - pow(PmissZ+E_beam,2);
+    }
+    cout<<"raffled recoil : "<<Prec3.Mag()<<endl;
+    cout<<"calculated recoil : "<<Pmiss.Mag()<<endl;*/
     //    hkk->Fill(k_i*k_f);
     //    cout<<"Sinit = "<<s_init<<endl;  
     //    Double_t s_init1 = 2*E_beam*0.940 + 0.940*0.940;  
@@ -237,7 +249,8 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
 
       // define components for the weight:
       //    Target   transp.eff det.eff.   30 days   nb->b   b->cm2
-      con = 6.e23 * 0.5       * 0.75  * 3600*24*30 * 1e-9 * 1e-24;     
+      con = 6.e23 * 0.5       * 0.75  * 3600*24*30 * 1e-9 * 1e-24;     // target 1
+      //con = 1.27e24 * 0.5     * 0.75  * 3600*24*30 * 1e-9 * 1e-24; // target 2
       Sr = (2*3.14*(cos((theta_cm-2.5)*3.14/180)-cos((theta_cm+2.5)*3.14/180))) ;
       Beam = GammaBeamHist->GetBinContent(GammaBeamHist->FindBin(E_beam));
       cs_theta_cm = pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4);
@@ -246,12 +259,12 @@ void Gen_gn_pipm(int N = 10000, bool printOutput = false){
       //                       nb/Sr                       nb->b    b->cm2                                 Sr                                       Beam     Target    transp. d.eff     30 days                       theta_cm dependence of the cross-seection                                                                                                       
       //weight = (cross_section*(gamma_cm*gamma_cm)/3.14) * (1e-9) * (1e-24) * (2*3.14*(cos((theta_cm-0.5)*3.14/180)-cos((theta_cm+0.5)*3.14/180))) * (5e7) *  (6e23)  *  0.5   *  0.75 *  3600*24*30 * pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4) /(N);
 
-      weight = con * (cross_section*(gamma_cm*gamma_cm)/3.14) * Sr * Beam *  cs_theta_cm / (N);
-      weight_kk = con * (cross_section*(k_i*k_f)/3.14) * Sr * Beam * cs_theta_cm / (N);
+      weight = con * (cross_section*(gamma_cm*gamma_cm)/3.14) * Sr * Beam *  cs_theta_cm / N;
+      weight_kk = con * (cross_section*(k_i*k_f)/3.14) * Sr * Beam * cs_theta_cm / N;
 
       //cout<<"w = "<<weight<<", w_kk = "<<weight_kk<<endl;
 
-      if(abs(t)>3 && abs(u)>3){ // only consider 'hard' scattering events.                                                                                                       
+      if(abs(t)>2 && abs(u)>2){ // only consider 'hard' scattering events.                                                                                                       
 	T->Fill();
       }
     } // loop over theta_cm

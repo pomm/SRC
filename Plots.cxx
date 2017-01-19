@@ -10,7 +10,7 @@ void Plots(){
     gStyle->SetTitleSize(0.05,"Y");
     gStyle->SetTitleSize(0.05,"Z");
 
-    TTree* T = ((TTree*)(TFile::Open("gn_pimp_N10000.root")->Get("T")));
+    TTree* T = ((TTree*)(TFile::Open("gn_pimp_N10000_newGamma.root")->Get("T")));
     
     // Mean Field. Theta c.m. = 90
     TH2F* theta_P_p_MF_90 = new TH2F("theta_P_p_MF_90","; |P_{#pi}| [GeV/c]; #theta_{#pi} [degrees]",24,0,12 , 14,5,75);
