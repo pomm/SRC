@@ -3,13 +3,13 @@ void Gen_gn_pipm(int N = 10000, int A = 2, bool printOutput = false){
   // A - nucleus, which contains the target nucleon
 
   TString out;
-  out.Form("gn_pimp_N%d_oldGamma.root",N);
+  out.Form("gn_pimp_N%d_ng_tm1.root",N);
 
   // Gamma spectrum
   Double_t E_beam = 9;
   //  TCanvas* c = new TCanvas("c","c",0,0,500,500);
   ifstream file;
-  file.open("collimated_cor1.txt");
+  file.open("collimated3_4_Ee12.txt");
   const Int_t lines =46;
   TH1F* GammaBeamHist= new TH1F("","", lines, 2.8, 12.);
   double counts, ener;
@@ -249,7 +249,7 @@ void Gen_gn_pipm(int N = 10000, int A = 2, bool printOutput = false){
 
       // define components for the weight:
       //    Target   transp.eff det.eff.   30 days   nb->b   b->cm2
-      con = 6.e23 * 0.5       * 0.75  * 3600*24*30 * 1e-9 * 1e-24;     // target 1
+      con = 6.3e23 * 0.5       * 0.75  * 3600*24*30 * 1e-9 * 1e-24;     // target 1
       //con = 1.27e24 * 0.5     * 0.75  * 3600*24*30 * 1e-9 * 1e-24; // target 2
       Sr = (2*3.14*(cos((theta_cm-2.5)*3.14/180)-cos((theta_cm+2.5)*3.14/180))) ;
       Beam = GammaBeamHist->GetBinContent(GammaBeamHist->FindBin(E_beam));

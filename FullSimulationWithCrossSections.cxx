@@ -9,28 +9,18 @@ void FullSimulationWithCrossSections()
     ifstream file;
     file.open("Gluex_Gamma_Beam.txt");
     TH1F* GammaBeamHist= new TH1F("","", 54, 3.12-0.16/2, 11.76+.16/2);
-    Double_t EnergyIterator1, EnergyIterator2;
+    Double_t a,b;
     int counter = 0;
     for(int i=0;i<54;i++){
         GammaBeamHist->SetBinContent(i+1,0);
+	file >> a >> b;
+	cout<<"a = "<<a <<", b = "<<b<<endl;
+	GammaBeamHist->SetBinContent(i+1, b);
     }
-
-    while(! file.eof()){
-            file >> EnergyIterator1;
-            file >> EnergyIterator2;
-            GammaBeamHist->Fill(EnergyIterator1, EnergyIterator2);
-    }
-    
-    
-    
-    
-    
-    
-    
     
     for(int i=1;i<=54;i++){GammaBeamHist->SetBinError(i,0);}
-    GammaBeamHist->Rebin(2);
-    
+    // GammaBeamHist->Rebin(2);
+    GammaBeamHist->Draw();
     
     
     //
@@ -49,7 +39,7 @@ void FullSimulationWithCrossSections()
     // Each Event has  forward scatter proton, a pion, and a recoil neutron.
     // The reconstructed initial momentum of the proton knockout of the nucleus is lables as "missing momentum"
     //
-    TFile* f = new TFile("FullMC_Gluex_9GeV_test1.root","recreate");
+    TFile* f = new TFile("FullMC_Gluex_9GeV_test.root","recreate");
     TTree* T = new TTree("T","T");
     
     Double_t theta_recoil, phi_recoil, Recoil_P;
@@ -131,7 +121,7 @@ void FullSimulationWithCrossSections()
     // 2. If it has high-momentum raffle a correlated partner
     // 3. Boost to the nucleon rest frame
     //
-    const int N = 500;
+    const int N = 10000;
     for(int i=0; i<N; i++){
         
         if(i%(N/100)==0) cout << i/(N/100)<<"%" << endl;
