@@ -2,8 +2,8 @@
     
     
     gStyle->SetOptStat(0);
-//    TTree* T = ((TTree*)(TFile::Open("FullMC_Gluex_9GeV_StandingProton.root")->Get("T")));
-    TTree* T = ((TTree*)(TFile::Open("FullMC_Gluex_9GeV_test1.root")->Get("T")));
+    //    TTree* T = ((TTree*)(TFile::Open("FullMC_Gluex_9GeV.root")->Get("T")));
+    TTree* T = ((TTree*)(TFile::Open("FullSim_N100k.root")->Get("T")));
     
     
     
@@ -239,11 +239,6 @@
     
 */
     
-    cout<<"MF, 90, N events = "<<phi_MF_90->Integral()<<endl;
-    cout<<"MF, All, N events = "<<phi_MF_All->Integral()<<endl;
-    cout<<"SRC, 90, N events = "<<phi_SRC_90->Integral()<<endl;
-    cout<<"SRC, All, N events = "<<phi_SRC_All->Integral()<<endl;
-
     cout<<"MF, 90, N events = "<<theta_P_p_MF_90->Integral()<<endl;
     cout<<"MF, All, N events = "<<theta_P_p_MF_All->Integral()<<endl;
     cout<<"SRC, 90, N events = "<<theta_P_p_SRC_90->Integral()<<endl;

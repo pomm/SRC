@@ -19,7 +19,7 @@ void sigma(){
   ifstream file;
   //  file.open("Gluex_Gamma_Beam.txt");     
   //const Int_t lines = 55;                                                                                                                       
-  file.open("collimated_cor1.txt");
+  file.open("collimated3_4_Ee12.txt");
   const Int_t lines =46;
   TH1F* GammaBeamHist= new TH1F("","", lines, 2.8, 12.);
   Double_t EnergyIterator1, EnergyIterator2;
