@@ -13,7 +13,7 @@
 #include "TLorentzVector.h"
 #include "TRandom2.h"
 
-void Gen_gn_pimp_th(int N = 100000, int A = 2, bool printOutput = false){
+void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
   // A - nucleus, which contains the target nucleon
 
   // Half of the step in theta
@@ -21,7 +21,7 @@ void Gen_gn_pimp_th(int N = 100000, int A = 2, bool printOutput = false){
   int Nthpo = (130. - 50.)/(2.*tsh);
 
   TString out;
-  out.Form("gn_pimp_N%d_col5a.root",N);
+  out.Form("gn_pimp_N%d_latest.root",N);
 
   // Gamma spectrum
   double E_beam = 9;
@@ -136,20 +136,16 @@ void Gen_gn_pimp_th(int N = 100000, int A = 2, bool printOutput = false){
   // variables for the reaction particles in different c.s.:
   TVector3 m1, m; // boost vectors
   Double_t rot_phi, rot_theta, theta_ll, phi_ll;
-  TLorentzVector Vbeam_lab;
-  TLorentzVector Vmiss_lab;
   TLorentzVector Vbeam_nrf;
   TLorentzVector Vmiss_nrf;
   TLorentzVector Vbeam_cm;
   TLorentzVector Vmiss_cm;
   TVector3 Vbeam_cm_oz3;
   TVector3 Vmiss_cm_oz3;
-  TVector3 Vpart3_cm3;
-  TVector3 Vpart4_cm3;	
+  TVector3 Vpart3_cm_oz3;
+  TVector3 Vpart4_cm_oz3;
   TVector3 Vpart3_cm3;
   TVector3 Vpart4_cm3;
-  TLorentzVector Vpart3_lab;
-  TLorentzVector Vpart4_lab;
 
   // Event generation:
   // 1. Raffle a nucleon in the nucleus
@@ -158,8 +154,11 @@ void Gen_gn_pimp_th(int N = 100000, int A = 2, bool printOutput = false){
 
     if(i%(N/100)==0) cout << i/(N/100)<<"%" << endl; 
 
+    // consider only coherent peak
+    //    do{
     E_beam = GammaBeamHist->GetRandom();
-    //    cout<<"bin number is "<<GammaBeamHist->FindBin(E_beam)<<endl;
+      // }while(!(E_beam >= 8.4 && E_beam <= 9.1));
+    //cout<<"for energy "<<E_beam<<" bin number is "<<GammaBeamHist->FindBin(E_beam)<<endl;
     Original_E = E_beam;
 
     Pmiss = n_k_k2->GetRandom();
@@ -204,8 +203,8 @@ void Gen_gn_pimp_th(int N = 100000, int A = 2, bool printOutput = false){
     //cout<<"Sinit1 = "<<s_init1<<endl;
 
     // 4-momentum of the beam and nucleon in the lab:
-    Vbeam_lab(TVector3(0.,0.,E_beam),         E_beam                            );
-    Vmiss_lab(TVector3(PmissX,PmissY,PmissZ), sqrt(pow(0.940,2) + pow(Pmiss,2)) );
+    TLorentzVector Vbeam_lab(TVector3(0.,0.,E_beam),         E_beam                            );
+    TLorentzVector Vmiss_lab(TVector3(PmissX,PmissY,PmissZ), sqrt(pow(0.940,2) + pow(Pmiss,2)) );
     
     // beam and nucleon in the nucleon rest frame to calculate the cross-section:
     m1 = Vmiss_lab.BoostVector();
@@ -255,8 +254,8 @@ void Gen_gn_pimp_th(int N = 100000, int A = 2, bool printOutput = false){
       phi_ll = gRandom->Uniform(0,2*TMath::Pi());
       
       // outgoing particles:
-      Vpart3_cm_oz3( Vbeam_cm_oz3.Z()*cos(phi_ll)*sin(theta_ll),  Vbeam_cm_oz3.Z()*sin(phi_ll)*sin(theta_ll),  Vbeam_cm_oz3.Z()*cos(theta_ll));
-      Vpart4_cm_oz3(-Vbeam_cm_oz3.Z()*cos(phi_ll)*sin(theta_ll), -Vbeam_cm_oz3.Z()*sin(phi_ll)*sin(theta_ll), -Vbeam_cm_oz3.Z()*cos(theta_ll));
+      Vpart3_cm_oz3.SetXYZ( Vbeam_cm_oz3.Z()*cos(phi_ll)*sin(theta_ll),  Vbeam_cm_oz3.Z()*sin(phi_ll)*sin(theta_ll),  Vbeam_cm_oz3.Z()*cos(theta_ll));
+      Vpart4_cm_oz3.SetXYZ(-Vbeam_cm_oz3.Z()*cos(phi_ll)*sin(theta_ll), -Vbeam_cm_oz3.Z()*sin(phi_ll)*sin(theta_ll), -Vbeam_cm_oz3.Z()*cos(theta_ll));
       
       // rotate back:
       Vpart3_cm3 = Vpart3_cm_oz3;
@@ -267,8 +266,8 @@ void Gen_gn_pimp_th(int N = 100000, int A = 2, bool printOutput = false){
       Vpart4_cm3.RotateZ(rot_phi);
       
       // boost outgoing particles to the lab system:
-      Vpart3_lab(Vpart3_cm3, sqrt( pow(Vpart3_cm3.Mag(),2) + pow(0.140,2) ) );
-      Vpart4_lab(Vpart4_cm3, sqrt( pow(Vpart4_cm3.Mag(),2) + pow(0.938,2) ) );
+      TLorentzVector Vpart3_lab(Vpart3_cm3, sqrt( pow(Vpart3_cm3.Mag(),2) + pow(0.140,2) ) );
+      TLorentzVector Vpart4_lab(Vpart4_cm3, sqrt( pow(Vpart4_cm3.Mag(),2) + pow(0.938,2) ) );
       Vpart3_lab.Boost(m);
       Vpart4_lab.Boost(m);
 
@@ -294,8 +293,7 @@ void Gen_gn_pimp_th(int N = 100000, int A = 2, bool printOutput = false){
 
       // define components for the weight:
       //    Target   transp.eff det.eff.   30 days   nb->b   b->cm2
-      con = 6.3e23 * 0.5       * 0.75  * 3600*24*30 * 1e-9 * 1e-24;     // target 1
-      //con = 1.27e24 * 0.5     * 0.75  * 3600*24*30 * 1e-9 * 1e-24; // target 2
+      con = 1.27e24 * 0.5     * 0.75  * 3600*24*30 * 1e-9 * 1e-24; // target 2
       Sr = (2*3.14*(cos((theta_cm-tsh)*3.14/180)-cos((theta_cm+tsh)*3.14/180))) ; // theta_cm +- half of the step
       Beam = GammaBeamHist->GetBinContent(GammaBeamHist->FindBin(E_beam));
       cs_theta_cm = pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4);
@@ -309,9 +307,9 @@ void Gen_gn_pimp_th(int N = 100000, int A = 2, bool printOutput = false){
 
       //cout<<"w = "<<weight<<", w_kk = "<<weight_kk<<endl;
 
-      if(abs(t)>2 && abs(u)>2){ // only consider 'hard' scattering events.                                                                                                       
+      //      if(abs(t)>1. && abs(u)>1.){ // only consider 'hard' scattering events.                                                                                                       
 	T->Fill();
-      }
+	// }
     } // loop over theta_cm
     //hga->Fill(gamma_cm*gamma_cm);
 
