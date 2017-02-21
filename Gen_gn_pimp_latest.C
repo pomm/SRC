@@ -13,11 +13,11 @@
 #include "TLorentzVector.h"
 #include "TRandom2.h"
 
-void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
+void Gen_gn_pimp_latest(int N = 1000, int A = 2, bool printOutput = false){
   // A - nucleus, which contains the target nucleon
 
   // Half of the step in theta_cm
-  double tsh = 1./2.;// degrees
+  double tsh = 10./2.;// degrees
   int Nthpo = (130. - 50.)/(2.*tsh);
 
   TString out;
@@ -39,7 +39,7 @@ void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
     std::istringstream iss(line);
     double x = 0., y = 0.;
     iss>>x>>y;
-    std::cout<<"point: "<<x<<" "<<y<<" ; i = "<<i<<std::endl;
+    //    std::cout<<"point: "<<x<<" "<<y<<" ; i = "<<i<<std::endl;
     GammaBeamHist->SetBinContent(i, y);
   }
 
@@ -203,7 +203,7 @@ void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
     // k_i, k_f relative c.m. momentum in the initial and final states:
     k_i = fabs(s_init - 0.940*0.940)/2./sqrt(s_init);//sqrt(0.5*E_beam*0.940);
     k_f = sqrt((s_init - pow((0.938-0.140),2))*(s_init - pow((0.938+0.140),2))/4./s_init);
-    k_i_s = (s_old - 0.940*0.940)/2./sqrt(s_old);  
+    k_i_s = fabs(s_old - 0.940*0.940)/2./sqrt(s_old);  
     k_f_s = sqrt((s_old - pow((0.938-0.140),2))*(s_old - pow((0.938+0.140),2))/4./s_old);
     //    cout<<"k_i = "<<k_i<<", k_f = "<<k_f<<", k_i * k_f = "<<k_i*k_f<<", Pmiss = "<<Pmiss<<endl;
     /*    cout<<"raffled recoil : "<<Prec3.Mag()<<endl;
@@ -310,9 +310,9 @@ void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
       //weight = (cross_section*(gamma_cm*gamma_cm)/3.14) * (1e-9) * (1e-24) * (2*3.14*(cos((theta_cm-0.5)*3.14/180)-cos((theta_cm+0.5)*3.14/180))) * (5e7) *  (6e23)  *  0.5   *  0.75 *  3600*24*30 * pow((1-cos(theta_cm*3.14/180)),-5) * pow((1+cos(theta_cm*3.14/180)),-4) /(N);
 
       weight = con * (cross_section*(gamma_cm*gamma_cm)/3.14) * Sr * Beam *  cs_theta_cm / N;
-      weight_kk = 1000.* con * (cross_section*(k_i*k_f)/3.14) * Sr * Beam * cs_theta_cm / N;
-      weight_kk_s = 1000.* con * (cross_section*(k_i_s*k_f_s)/3.14) * Sr * Beam * cs_theta_cm / N;
-      //cout<<"w = "<<weight<<", w_kk = "<<weight_kk<<", weight_kk_s = "<<weight_kk_s<<endl;
+      weight_kk = con * (cross_section*(k_i*k_f)/3.14) * Sr * Beam * cs_theta_cm / N;
+      weight_kk_s = con * (cross_section*(k_i_s*k_f_s)/3.14) * Sr * Beam * cs_theta_cm / N;
+      cout<<"w = "<<weight<<", w_kk = "<<weight_kk<<", weight_kk_s = "<<weight_kk_s<<endl;
 
       //      if(abs(t)>1. && abs(u)>1.){ // only consider 'hard' scattering events.                                                                                                       
 	T->Fill();
