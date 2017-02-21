@@ -31,8 +31,6 @@
     theta_Ppi_MF_90->SetYTitle("#theta_{#pi} [degrees]");
     phi_MF_90->SetXTitle("#Delta#phi [degrees]");
 
-    
-    
     // Mean Field. Theta c.m. = All
     TH2F* theta_P_p_MF_All = new TH2F("theta_P_p_MF_All","",24,0,12 , 70,5,75);
     theta_P_p_MF_All->SetXTitle("|P_{p}| [GeV/c]");
