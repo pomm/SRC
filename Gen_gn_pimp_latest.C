@@ -13,11 +13,11 @@
 #include "TLorentzVector.h"
 #include "TRandom2.h"
 
-void Gen_gn_pimp_latest(int N = 1000, int A = 2, bool printOutput = false){
+void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
   // A - nucleus, which contains the target nucleon
 
   // Half of the step in theta_cm
-  double tsh = 10./2.;// degrees
+  double tsh = 1./2.;// degrees
   int Nthpo = (130. - 50.)/(2.*tsh);
 
   TString out;
@@ -66,7 +66,8 @@ void Gen_gn_pimp_latest(int N = 1000, int A = 2, bool printOutput = false){
   double t,u,s;
   double theta_cm;
   double weight;
-  double weight_kk, weight_kk_s;
+  double weight_kk;
+  double weight_kks;
   double Effective_E;
   double Original_E;
   double gamma_cm;
@@ -78,7 +79,7 @@ void Gen_gn_pimp_latest(int N = 1000, int A = 2, bool printOutput = false){
 
   T->Branch("weight",&weight,"weight/D");                     // Event weight based on cross-section                                                                                 
   T->Branch("weight_kk",&weight_kk,"weight_kk/D");
-  T->Branch("weight_kk_s",&weight_kk,"weight_kk_s/D");
+  T->Branch("weight_kks",&weight_kks,"weight_kks/D");
   T->Branch("theta_cm",&theta_cm,"theta_cm/D");
   T->Branch("Effective_E",&Effective_E,"Effective_E/D");     // E_beam in the standing nucleon frame
   T->Branch("Original_E",&Original_E,"Original_E/D");        // E_beam in the lab frame
@@ -311,8 +312,8 @@ void Gen_gn_pimp_latest(int N = 1000, int A = 2, bool printOutput = false){
 
       weight = con * (cross_section*(gamma_cm*gamma_cm)/3.14) * Sr * Beam *  cs_theta_cm / N;
       weight_kk = con * (cross_section*(k_i*k_f)/3.14) * Sr * Beam * cs_theta_cm / N;
-      weight_kk_s = con * (cross_section*(k_i_s*k_f_s)/3.14) * Sr * Beam * cs_theta_cm / N;
-      cout<<"w = "<<weight<<", w_kk = "<<weight_kk<<", weight_kk_s = "<<weight_kk_s<<endl;
+      weight_kks = con * (cross_section*(k_i_s*k_f_s)/3.14) * Sr * Beam * cs_theta_cm / N;
+      //      cout<<"w = "<<weight<<", w_kk = "<<weight_kk<<", weight_kks = "<<weight_kks<<endl;
 
       //      if(abs(t)>1. && abs(u)>1.){ // only consider 'hard' scattering events.                                                                                                       
 	T->Fill();

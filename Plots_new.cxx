@@ -98,7 +98,7 @@ void Plots_new(){
   wSRC90coh.Append(fac);
   cout<<"wSRC90coh"<<endl;
   cout<<  wSRC90coh.Data()<<endl;
-  
+  /*
     // Mean Field. Theta c.m. = 90
     TH2F* theta_P_p_MF_90 = new TH2F("theta_P_p_MF_90","; |P_{#pi}| [GeV/c]; #theta_{#pi} [#circ]",24,0,12 , 14,5,75);
     TH2F* theta_P_pi_MF_90 = new TH2F("theta_P_pi_MF_90","; |P_{p}| [GeV/c]; #theta_{p} [#circ]",24,0,12 , 14,5,75);
@@ -114,7 +114,7 @@ void Plots_new(){
     T->Draw("theta_P4:theta_P3>>theta_Ppi_MF_90", wMF90coh,"col2z");
     C1->cd(4);
     T->Draw("TMath::Abs(phi_P3-phi_P4)>>phi_MF_90",wMF90coh,"h");
-  
+  */
     // Mean Field. Theta c.m. = All
     TH2F* theta_P_p_MF_All = new TH2F("theta_P_p_MF_All","; |P_{p}| [GeV/c]; #theta_{p} [#circ]",24,0,12 , 14,5,75);
     TH2F* theta_P_pi_MF_All = new TH2F("theta_P_pi_MF_All","; |P_{#pi}| [GeV/c]; #theta_{#pi} [#circ]",24,0,12 , 14,5,75);
@@ -130,7 +130,7 @@ void Plots_new(){
     T->Draw("theta_P4:theta_P3>>theta_Ppi_MF_All", wMFcoh,"col2z");
     C2->cd(4);
     T->Draw("TMath::Abs(phi_P4-phi_P3)>>phi_MF_All",wMFcoh,"h");
-    
+    /*
     // SRC. Theta c.m. = 90
     TH2F* theta_P_p_SRC_90 = new TH2F("theta_P_p_SRC_90","; |P_{p}| [GeV/c]; #theta_{p} [#circ]",24,0,12 , 14,5,75);
     TH2F* theta_P_pi_SRC_90 = new TH2F("theta_P_pi_SRC_90","; |P_{#pi}| [GeV/c]; #theta_{#pi} [#circ]",24,0,12 , 14,5,75);
@@ -141,12 +141,12 @@ void Plots_new(){
     C3->cd(1);
     T->Draw("theta_P4:absP4>>theta_P_p_SRC_90",wSRC90coh,"col2z");
     C3->cd(2);
-    T->Draw("theta_P3:absP3>>theta_P_pi_SRC_90",wSRC90coh,"col2z");
+    T->Draw("theta_P4:absP4"      , "weight_kk_s","col2z");   
     C3->cd(3);
     T->Draw("theta_P4:theta_P3>>theta_Ppi_SRC_90",wSRC90coh,"col2z");
     C3->cd(4);
     T->Draw("TMath::Abs(phi_P4-phi_P3)>>phi_SRC_90",wSRC90coh,"h");
-    
+    */
     // SRC. Theta c.m. = All
     TH2F* theta_P_p_SRC_All = new TH2F("theta_P_p_SRC_All","; |P_{p}| [GeV/c]; #theta_{p} [#circ]",24,0,12 , 14,5,75);
     TH2F* theta_P_pi_SRC_All = new TH2F("theta_P_pi_SRC_All","; |P_{#pi}| [GeV/c]; #theta_{#pi} [#circ]",24,0,12 , 14,5,75);
@@ -164,15 +164,15 @@ void Plots_new(){
     T->Draw("TMath::Abs(phi_P4-phi_P3)>>phi_SRC_All", wSRCcoh,"h");
 
     // Print the number of events!!!!
-    if(theta_P_p_MF_All->Integral()>0.){
+    //if(theta_P_p_MF_All->Integral()>0.){
       //    cout<<"MF, 90, N events = "<<theta_P_p_MF_90->Integral()<<endl;
        cout<<"MF, All, N events = "<<theta_P_p_MF_All->Integral()<<endl;
-    }
-    if(theta_P_p_SRC_All->Integral()>0.){
+       //}
+       //if(theta_P_p_SRC_All->Integral()>0.){
       //cout<<"SRC, 90, N events = "<<theta_P_p_SRC_90->Integral()<<endl;
      cout<<"SRC, All, N events = "<<theta_P_p_SRC_All->Integral()<<endl;
-    }
-
+     //}
+     /*
     TH1F* Ebeam_MF_90 = new TH1F("Ebeam_MF_90","; E_{beam} [GeV]", 46, 2.8, 12);
     TH1F* Ebeam_MF_All = new TH1F("Ebeam_MF_All","; E_{beam} [GeV]", 46, 2.8, 12);    
     TH1F* Ebeam_SRC_90 = new TH1F("Ebeam_SRC_90","; E_{beam} [GeV]", 46, 2.8, 12);
@@ -222,7 +222,7 @@ void Plots_new(){
     T->Draw("TMath::Abs(t):Original_E>>Et_SRC_90"  ,wSRC90,"col2z");
     C6->cd(1);
     T->Draw("TMath::Abs(t):Original_E>>Et_MF_90",wMF90,"col2z");
-
+     */
     // divide by 5 for 5 nuclear targets 'sharing' the beam time
 
     /*
@@ -235,7 +235,7 @@ void Plots_new(){
     T->Draw("1"  ,"weight*(TMath::Abs(t)>3&&TMath::Abs(u)>3&&Precoil>0.1&&theta_recoil<160&&Precoil>0.3&&TMath::Abs(theta_cm-90)<10)*0.5*0.8/5.","h same");
     */
 
-    TCanvas* TmpC1 = new TCanvas("TmpC1","theta_recoil",500,500);
+     /*    TCanvas* TmpC1 = new TCanvas("TmpC1","theta_recoil",500,500);
     TH1F* hth_rec = new TH1F("hth_rec","; #theta_{recoil} [#circ]; counts",18,0,180);
     TmpC1->cd();
     T->Draw("theta_recoil>>hth_rec"  ,wSRC,"h");
@@ -293,7 +293,7 @@ void Plots_new(){
     sany->cd(5);
     T->Draw("P_miss",wst,"hist");
     sany->cd(6);
-    T->Draw("P_miss");
+    T->Draw("P_miss");*/
     /*
     theta_P_p_MF_90->GetXaxis()->SetTitleSize(0.06);
     theta_P_p_MF_90->GetYaxis()->SetTitleSize(0.06);
@@ -321,7 +321,7 @@ void Plots_new(){
     */
     
     
-    theta_P_p_MF_All->GetXaxis()->SetTitleSize(0.06);
+     /*    theta_P_p_MF_All->GetXaxis()->SetTitleSize(0.06);
     theta_P_p_MF_All->GetYaxis()->SetTitleSize(0.06);
     theta_P_pi_MF_All->GetXaxis()->SetTitleSize(0.06);
     theta_P_pi_MF_All->GetYaxis()->SetTitleSize(0.06);
@@ -344,7 +344,7 @@ void Plots_new(){
     theta_Ppi_MF_All->GetXaxis()->SetLabelSize(0.06);
     theta_Ppi_MF_All->GetYaxis()->SetLabelSize(0.06);
     phi_MF_All->GetXaxis()->SetLabelSize(0.06);
-    
+     */
     
     /*
     theta_P_p_SRC_90->GetXaxis()->SetTitleSize(0.06);
@@ -372,7 +372,7 @@ void Plots_new(){
     phi_SRC_90->GetXaxis()->SetLabelSize(0.06);
     */
     
-    
+    /*
     theta_P_p_SRC_All->GetXaxis()->SetTitleSize(0.06);
     theta_P_p_SRC_All->GetYaxis()->SetTitleSize(0.06);
     theta_P_pi_SRC_All->GetXaxis()->SetTitleSize(0.06);
@@ -396,7 +396,7 @@ void Plots_new(){
     theta_Ppi_SRC_All->GetXaxis()->SetLabelSize(0.06);
     theta_Ppi_SRC_All->GetYaxis()->SetLabelSize(0.06);
     phi_SRC_All->GetXaxis()->SetLabelSize(0.06);   
-    
+    */
 }
 
 
