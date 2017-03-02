@@ -13,7 +13,7 @@
 #include "TLorentzVector.h"
 #include "TRandom2.h"
 
-void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
+void Gen_gn_pimp_up(int N = 100000, int A = 2, bool printOutput = false){
   // A - nucleus, which contains the target nucleon
 
   // Half of the step in theta_cm
@@ -21,7 +21,7 @@ void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
   int Nthpo = (130. - 50.)/(2.*tsh);
 
   TString out;
-  out.Form("gn_pimp_N%d_news.root",N);
+  out.Form("gn_pimp_N%d_up.root",N);
 
   // Gamma spectrum
   double E_beam = 9;
@@ -74,9 +74,8 @@ void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
   double Nucleon_cm;
   double cross_section;
 
-  double k_i, k_i_s;
-  double k_f, k_f_s;
-  double s_init, s_old, s_misak;
+  double k_i, k_f;
+  double s_init;
 
   T->Branch("weight",&weight,"weight/D");                     // Event weight based on cross-section                                                                                 
   T->Branch("weight_kk",&weight_kk,"weight_kk/D");
@@ -90,11 +89,7 @@ void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
 
   T->Branch("k_i",&k_i,"k_i/D");
   T->Branch("k_f",&k_f,"k_f/D");
-  T->Branch("k_i_s",&k_i_s,"k_i_s/D");
-  T->Branch("k_f_s",&k_f_s,"k_f_s/D");
-  T->Branch("s_old",&s_old,"s_old/D");
   T->Branch("s_init",&s_init,"s_init/D");
-  T->Branch("s_misak",&s_misak,"s_misak/D");
 
   T->Branch("cross_section",&cross_section,"cross_section/D");
   T->Branch("theta_recoil",&theta_recoil,"theta_recoil/D");   // recoil proton in-plane angle                                                                             
@@ -190,36 +185,23 @@ void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
     PLCcm = (2*0.94 - Pcm3.Z())/0.940;
 
     // Factor:
-    // scattering off a free moving proton:
     s_init = 0.;
-    s_old = 0.;    
-    s_misak = 0.;
-    s_old = pow((E_beam + sqrt(Pmiss*Pmiss + 0.940*0.940)),2) - pow(PmissX,2) - pow(PmissY,2) - pow(PmissZ+E_beam,2);//2*E_beam*0.940 + 0.940*0.940;
     // scattering off proton inside nucleus:
-    // calculate light cone momentum fractions:
     if(Pmiss > 0.75 || (PLCcm - PLCrecoil) < 0.){
       continue;
     }
 
-    //    cout<<"old s = "<<s_init<<", k_i*k_f = "<< (s_init - 0.940*0.940)/2./sqrt(s_init) * sqrt((s_init - pow((0.938-0.140),2))*(s_init - pow((0.938+0.140),2))/4./s_init)<<endl;
     if(Pmiss < 0.25){
       s_init = pow( E_beam + 0.940 - 0.015 - Pmiss*Pmiss/(2.*0.940*(A-1)) ,2) - pow(PmissX,2) - pow(PmissY,2) - pow(PmissZ+E_beam,2);
     }else if(Pmiss >= 0.25){
       s_init = pow( E_beam + 2*0.940 - sqrt(pow(Prec3.Mag(),2) + 0.940*0.940) ,2) - pow(PmissX,2) - pow(PmissY,2) - pow(PmissZ+E_beam,2);
     }
     if(s_init < pow(0.94+0.14,2)) continue;
-    //cout<<"new s = "<<s_init<<endl;
     // k_i, k_f relative c.m. momentum in the initial and final states:
     k_i = (s_init - 0.940*0.940)/2./sqrt(s_init);//sqrt(0.5*E_beam*0.940);
     k_f = sqrt((s_init - pow((0.938-0.140),2))*(s_init - pow((0.938+0.140),2))/4./s_init);
-    k_i_s = (s_old - 0.940*0.940)/2./sqrt(s_old);  
-    k_f_s = sqrt((s_old - pow((0.938-0.140),2))*(s_old - pow((0.938+0.140),2))/4./s_old);
     //    cout<<"k_i = "<<k_i<<", k_f = "<<k_f<<", k_i * k_f = "<<k_i*k_f<<", Pmiss = "<<Pmiss<<endl;
-    /*    cout<<"raffled recoil : "<<Prec3.Mag()<<endl;
-    cout<<"calculated recoil : "<<Pmiss.Mag()<<endl;*/
-    //    hkk->Fill(k_i*k_f);
-    s_misak = 0.940*0.940 + 2*E_beam*0.940*(PLCcm - PLCrecoil);  
-
+  
     // 4-momentum of the beam and nucleon in the lab:
     TLorentzVector Vbeam_lab(TVector3(0.,0.,E_beam),         E_beam                            );
     TLorentzVector Vmiss_lab(TVector3(PmissX,PmissY,PmissZ), sqrt(pow(0.940,2) + pow(Pmiss,2)) );
@@ -321,27 +303,23 @@ void Gen_gn_pimp_latest(int N = 100000, int A = 2, bool printOutput = false){
 
       weight = con * (cross_section*(gamma_cm*gamma_cm)/3.14) * Sr * Beam *  cs_theta_cm / N;
       weight_kk = con * (cross_section*(k_i*k_f)/3.14) * Sr * Beam * cs_theta_cm / N;
-      weight_kks = con * (cross_section*(k_i_s*k_f_s)/3.14) * Sr * Beam * cs_theta_cm / N;
       //      cout<<"w = "<<weight<<", w_kk = "<<weight_kk<<", weight_kks = "<<weight_kks<<endl;
 
-      if(weight_kk != weight_kk && k == 0){
+      /*      if(weight_kk != weight_kk && k == 0){
 
 	cout<<"----------k = "<<k<<endl;
 	cout<<"weight_kk = "<<weight_kk<<", con = "<<con<<", cross_section = "<<cross_section<<", Sr = "<<Sr<<", Beam = "<<Beam<<", cs_theta_cm = "<<cs_theta_cm<<endl;
 	cout<<"NAN!!!!!!! ki = "<<k_i<<", kf = "<<k_f<<", s_init = "<<s_init<<", s_old = "<<s_old<<", Ep = "<<2*0.940 - sqrt(pow(Prec3.Mag(),2) + 0.940*0.940) <<endl;
 	cout<<"Pmiss = "<<Pmiss<<", PmissX = "<<PmissX<<", PmissY = "<<PmissY<<", PmissZ = "<<PmissZ<<", Ebeam = "<<E_beam<<", Prec3.Mag = "<<Prec3.Mag()<<endl;
-	}
+	}*/
 
-      //      if(abs(t)>1. && abs(u)>1.){ // only consider 'hard' scattering events.                                                                                                       
+      if(abs(t)>1. && abs(u)>1.){ // only consider 'hard' scattering events.                                                                                                       
 	T->Fill();
-	// }
+      }
     } // loop over theta_cm
-    //hga->Fill(gamma_cm*gamma_cm);
 
   }// loop over N
   T->Write();
-  //hkk->Write();
-  //hga->Write();
   f->Write();
   f->Close();
 }
